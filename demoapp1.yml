@@ -49,7 +49,7 @@ kind: PodDisruptionBudget
 metadata:
   name: demoapp1-pdb
 spec:
-  maxUnavailable: 2
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: demoapp1
