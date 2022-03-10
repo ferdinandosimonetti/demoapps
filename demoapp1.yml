@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demoapp1
+  namespace: demoapps
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: demoapp1
+  template:
+    metadata:
+      labels:
+        app: demoapp1
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: demoapp1    
+      containers:
+      - name: nginxdemo
+        image: nginxdemos/hello
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demoapp1-svc
+  namespace: demoapps
+spec:
+  selector:
+    app: demoapp1
+  type: ClusterIP
+  sessionAffinity: None
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+  - name: web
+    protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: demoapp1-pdb
+spec:
+  maxUnavailable: 2
+  selector:
+    matchLabels:
+      app: demoapp1
