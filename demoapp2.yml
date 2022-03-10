@@ -5,7 +5,7 @@ metadata:
   name: demoapp2
   namespace: demoapps
 spec:
-  replicas: 6
+  replicas: 12
   selector:
     matchLabels:
       app: demoapp2
@@ -20,10 +20,31 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: demoapp2    
+              app: demoapp2
+#      nodeSelector:
+#        agentpool: agentpool
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: In
+                values:
+                - agentpool
+                - temp    
       containers:
       - name: nginxdemo
         image: nginxdemos/hello
+        resources:
+          requests:
+            cpu: 75m
+            memory: 128Mi
+          limits:
+            cpu: 100m
+            memory: 256Mi
+        ports:
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -44,12 +65,12 @@ spec:
     port: 80
     targetPort: 80
 ---
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: demoapp2-pdb
 spec:
-  maxUnavailable: 1
+  maxUnavailable: 33%
   selector:
     matchLabels:
       app: demoapp2
